@@ -19,8 +19,12 @@
 	<div id="list-window">
 		<div class="city" ng-repeat="city in cities">
 			{{city.yearRank}}: {{city.city}}
+			<a class="btn btn-primary sm" href="" ng-click="triggerClick(city.yearRank)">
+				Show info
+			</a>
 		</div>
 	</div>
+	<div id="map-panel"></div>
 
 </body>
 </html>

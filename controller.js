@@ -40,9 +40,47 @@ var mapctl = angular.module('myApp',[]).controller('mapCtrl', function($scope){
         	markerContentHTML += '<a href="#" onclick="getDirections('+lat+','+lon+')">Get directions</a>';
         markerContentHTML += '</div>';
 
+        marker.content = markerContentHTML;
 
+        google.maps.event.addListener(marker, 'click', function(){
+        	infoWindow.setContent('<h2>' + marker.title + '</h2>' + marker.content);
+        	infoWindow.open($scope.map, marker);
+        });
+
+        $scope.markers.push(marker);
 
 	}
+
+    //Without scope... the view can't see it
+    $scope.triggerClick = function(i){
+        google.maps.event.trigger($scope.markers[i-1],"click");
+    }
+
+    getDirections = function(lat, lon){
+	    var directionsService = new google.maps.DirectionsService();
+	    var directionsDisplay = new google.maps.DirectionsRenderer();
+    	var map = new google.maps.Map(document.getElementById('map'),{
+    		zoom: 7,
+    		mapTypeId: google.maps.MapTypeId.ROADMAP
+    	});
+    	directionsDisplay.setMap(map);
+    	directionsDisplay.setPanel(document.getElementById('map-panel'));
+
+         var request = {
+            //Origin hardcoded to Atlanta. Require geocode current loc,
+            //or give user input
+           origin: 'Atlanta, GA', 
+           destination:new google.maps.LatLng(lat,lon), 
+           travelMode: google.maps.DirectionsTravelMode.DRIVING
+         };
+
+         directionsService.route(request, function(response, status) {
+           if (status == google.maps.DirectionsStatus.OK) {
+             directionsDisplay.setDirections(response);
+           }
+         }); 
+
+    }
 
 	$scope.cities = cities;
 	for(i = 0; i < cities.length; i++){
