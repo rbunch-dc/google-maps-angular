@@ -18,8 +18,8 @@ var mapctl = angular.module('myApp',[]).controller('mapCtrl', function($scope){
 		// console.log(index);
 
 		var latLon = city.latLon.split(',');
-		console.log(latLon);
-		console.log(typeof(latLon));
+		// console.log(latLon);
+		// console.log(typeof(latLon));
 		var lat = latLon[0];
 		var lon = latLon[1];
 
@@ -45,7 +45,8 @@ var mapctl = angular.module('myApp',[]).controller('mapCtrl', function($scope){
     	    markerContentHTML += '<div class="pop-dens">Population Density: ' + city.lastPopDensity + '</div>';
         	markerContentHTML += '<div class="state">State: ' + city.state + '</div>';
         	markerContentHTML += '<div class="land-area">Land Area: ' + city.landArea + '</div>';
-        	markerContentHTML += '<a href="#" onclick="getDirections('+lat+','+lon+')">Get directions</a>';
+        	markerContentHTML += '<div><a href="#" onclick="getDirections('+lat+','+lon+')">Get directions</a></div>';
+        	markerContentHTML += '<div><a href="#" onclick="zoomOnCity('+lat+','+lon+')">Show me the courses!</a></div>';
         markerContentHTML += '</div>';
 
         marker.content = markerContentHTML;
@@ -96,8 +97,62 @@ var mapctl = angular.module('myApp',[]).controller('mapCtrl', function($scope){
              directionsDisplay.setDirections(response);
            }
          }); 
+    }
+
+    zoomOnCity = function(lat, lon){
+		position = new google.maps.LatLng(lat, lon);
+		// console.log(position);
+		map = new google.maps.Map(document.getElementById('map'), {
+			center: position,
+			zoom: 10
+		});
+		infowindow = new google.maps.InfoWindow();
+		var service = new google.maps.places.PlacesService(map);
+		service.nearbySearch({
+		  location: position,
+		  radius: 30000,
+		  types: ['park']
+		}, placesResults);         	
+
+ 		service.nearbySearch({
+		  location: position,
+		  radius: 30000,
+		  types: ['lodging']
+		}, placesResults);         	
 
     }
+
+	function placesResults(results, status) {
+		// console.log(results);
+		if (status === google.maps.places.PlacesServiceStatus.OK) {
+			for (var i = 0; i < results.length; i++) {
+				// console.log(results);
+	 			createPointOfInterestMarker(results[i]);
+			}
+		}
+	}
+
+	function createPointOfInterestMarker(place){
+		console.log(place);
+		var placeLoc = place.geometry.location;
+		var marker = new google.maps.Marker({
+	 		map: map,
+	 		position: place.geometry.location,
+	 		icon: place.icon
+		});
+
+		google.maps.event.addListener(marker, 'click', function() {
+			var photo = "";
+			if(place.photos){
+				photo = '<img src="' + place.photos[0].getUrl({'maxWidth': 150, 'maxHeight': 100})+'">';
+			}
+			var placeHTML = '<div class="location-image">' + photo + '</div>';
+			placeHTML += '<h5>' + place.vicinity + '</h6>';
+			place.content = placeHTML;
+	 		infowindow.setContent('<h2>'+place.name + '</h2>' + place.content);
+	 		infowindow.open(map, this);
+  		});
+	}
 
 	$scope.cities = cities;
 	for(i = 0; i < cities.length; i++){
